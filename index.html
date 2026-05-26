@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TechLance CRM</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --primary: #0a1628;
+    --accent: #00d4ff;
+    --accent2: #7c3aed;
+    --accent3: #10b981;
+    --surface: #0f2044;
+    --surface2: #162a50;
+    --surface3: #1e3a6e;
+    --text: #e8f0ff;
+    --muted: #7a9cc5;
+    --border: rgba(0,212,255,0.15);
+    --danger: #ef4444;
+    --warning: #f59e0b;
+    --success: #10b981;
+    --font-head: 'Syne', sans-serif;
+    --font-body: 'DM Sans', sans-serif;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:var(--primary); color:var(--text); font-family:var(--font-body); min-height:100vh; display:flex; overflow:hidden; }
+
+  /* SIDEBAR */
+  .sidebar {
+    width:220px; min-width:220px; background:var(--surface); border-right:1px solid var(--border);
+    display:flex; flex-direction:column; padding:0; position:relative; z-index:10;
+  }
+  .logo {
+    padding:20px 18px 16px; border-bottom:1px solid var(--border);
+    font-family:var(--font-head); font-size:20px; font-weight:800; letter-spacing:-0.5px;
+  }
+  .logo span { color:var(--accent); }
+  .logo sub { font-size:10px; color:var(--muted); font-weight:400; display:block; margin-top:-2px; letter-spacing:2px; }
+  .nav-section { padding:12px 0; }
+  .nav-label { font-size:10px; font-weight:600; color:var(--muted); letter-spacing:2px; padding:8px 18px 4px; text-transform:uppercase; }
+  .nav-item {
+    display:flex; align-items:center; gap:10px; padding:9px 18px; cursor:pointer;
+    font-size:13.5px; color:var(--muted); transition:all 0.15s; border-left:2px solid transparent;
+    font-family:var(--font-body);
+  }
+  .nav-item:hover { color:var(--text); background:var(--surface2); }
+  .nav-item.active { color:var(--accent); border-left-color:var(--accent); background:rgba(0,212,255,0.06); }
+  .nav-item svg { width:16px; height:16px; flex-shrink:0; }
+  .nav-badge { margin-left:auto; background:var(--accent2); color:#fff; font-size:10px; padding:2px 7px; border-radius:10px; }
+  .sidebar-footer { margin-top:auto; padding:16px 18px; border-top:1px solid var(--border); }
+  .user-chip { display:flex; align-items:center; gap:10px; }
+  .avatar { width:32px; height:32px; border-radius:50%; background:linear-gradient(135deg,var(--accent2),var(--accent)); display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; flex-shrink:0; }
+  .user-info { font-size:12px; }
+  .user-name { font-weight:500; color:var(--text); }
+  .user-role { color:var(--muted); font-size:11px; }
+
+  /* MAIN */
+  .main { flex:1; display:flex; flex-direction:column; overflow:hidden; }
+  .topbar {
+    height:52px; background:var(--surface); border-bottom:1px solid var(--border);
+    display:flex; align-items:center; padding:0 24px; gap:16px;
+  }
+  .page-title { font-family:var(--font-head); font-size:16px; font-weight:700; flex:1; }
+  .search-box {
+    display:flex; align-items:center; gap:8px; background:var(--surface2);
+    border:1px solid var(--border); border-radius:8px; padding:6px 12px; width:220px;
+  }
+  .search-box input { background:none; border:none; outline:none; color:var(--text); font-size:13px; width:100%; font-family:var(--font-body); }
+  .search-box input::placeholder { color:var(--muted); }
+  .btn {
+    padding:7px 16px; border-radius:8px; font-size:13px; font-family:var(--font-body);
+    cursor:pointer; border:none; font-weight:500; transition:all 0.15s; display:flex; align-items:center; gap:6px;
+  }
+  .btn-primary { background:var(--accent); color:var(--primary); }
+  .btn-primary:hover { background:#00bce0; }
+  .btn-outline { background:transparent; color:var(--muted); border:1px solid var(--border); }
+  .btn-outline:hover { color:var(--text); border-color:var(--muted); }
+  .notif-btn { width:34px; height:34px; border-radius:8px; background:var(--surface2); border:1px solid var(--border); display:flex; align-items:center; justify-content:center; cursor:pointer; position:relative; }
+  .notif-dot { position:absolute; top:6px; right:6px; width:7px; height:7px; background:var(--accent); border-radius:50%; }
+
+  /* CONTENT */
+  .content { flex:1; overflow-y:auto; padding:24px; }
+  .content::-webkit-scrollbar { width:5px; }
+  .content::-webkit-scrollbar-track { background:transparent; }
+  .content::-webkit-scrollbar-thumb { background:var(--surface3); border-radius:3px; }
+
+  /* PAGES */
+  .page { display:none; }
+  .page.active { display:block; }
+
+  /* DASHBOARD */
+  .kpi-row { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:20px; }
+  .kpi-card {
+    background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:18px;
+    position:relative; overflow:hidden;
+  }
+  .kpi-card::before { content:''; position:absolute; top:-20px; right:-20px; width:80px; height:80px; border-radius:50%; opacity:0.08; }
+  .kpi-card.blue::before { background:var(--accent); }
+  .kpi-card.purple::before { background:var(--accent2); }
+  .kpi-card.green::before { background:var(--success); }
+  .kpi-card.orange::before { background:var(--warning); }
+  .kpi-label { font-size:11px; color:var(--muted); font-weight:500; letter-spacing:0.5px; text-transform:uppercase; margin-bottom:8px; }
+  .kpi-value { font-family:var(--font-head); font-size:28px; font-weight:800; margin-bottom:4px; }
+  .kpi-card.blue .kpi-value { color:var(--accent); }
+  .kpi-card.purple .kpi-value { color:#a78bfa; }
+  .kpi-card.green .kpi-value { color:var(--success); }
+  .kpi-card.orange .kpi-value { color:var(--warning); }
+  .kpi-change { font-size:11px; }
+  .up { color:var(--success); } .down { color:var(--danger); }
+
+  .dash-grid { display:grid; grid-template-columns:1fr 340px; gap:14px; }
+  .card { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:18px; }
+  .card-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; }
+  .card-title { font-family:var(--font-head); font-size:14px; font-weight:700; }
+  .card-action { font-size:12px; color:var(--accent); cursor:pointer; }
+
+  /* PIPELINE */
+  .pipeline { display:flex; gap:6px; align-items:flex-end; height:120px; }
+  .pipe-bar { flex:1; border-radius:6px 6px 0 0; position:relative; cursor:pointer; transition:opacity 0.15s; }
+  .pipe-bar:hover { opacity:0.8; }
+  .pipe-bar .val { position:absolute; top:-20px; left:50%; transform:translateX(-50%); font-size:11px; font-weight:600; white-space:nowrap; }
+  .pipe-labels { display:flex; gap:6px; margin-top:6px; }
+  .pipe-label { flex:1; text-align:center; font-size:10px; color:var(--muted); }
+
+  /* ACTIVITY */
+  .activity-item { display:flex; gap:10px; padding:9px 0; border-bottom:1px solid var(--border); }
+  .activity-item:last-child { border-bottom:none; }
+  .act-icon { width:30px; height:30px; border-radius:8px; display:flex; align-items:center; justify-content:center; flex-shrink:0; font-size:14px; }
+  .act-text { font-size:13px; color:var(--text); }
+  .act-meta { font-size:11px; color:var(--muted); margin-top:2px; }
+
+  /* TABLE */
+  .table-wrap { overflow-x:auto; }
+  table { width:100%; border-collapse:collapse; font-size:13px; }
+  thead th { text-align:left; font-size:11px; font-weight:600; color:var(--muted); letter-spacing:1px; text-transform:uppercase; padding:10px 14px; border-bottom:1px solid var(--border); }
+  tbody tr { border-bottom:1px solid rgba(255,255,255,0.04); transition:background 0.1s; cursor:pointer; }
+  tbody tr:hover { background:var(--surface2); }
+  tbody td { padding:11px 14px; color:var(--text); }
+  .status-pill { display:inline-block; padding:3px 10px; border-radius:20px; font-size:11px; font-weight:600; }
+  .pill-green { background:rgba(16,185,129,0.15); color:#34d399; }
+  .pill-blue { background:rgba(0,212,255,0.1); color:var(--accent); }
+  .pill-yellow { background:rgba(245,158,11,0.15); color:#fbbf24; }
+  .pill-red { background:rgba(239,68,68,0.15); color:#f87171; }
+  .pill-purple { background:rgba(124,58,237,0.15); color:#a78bfa; }
+
+  /* FORM */
+  .form-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+  .form-group { display:flex; flex-direction:column; gap:5px; }
+  .form-group label { font-size:11px; font-weight:600; color:var(--muted); letter-spacing:0.5px; text-transform:uppercase; }
+  .form-group input, .form-group select, .form-group textarea {
+    background:var(--surface2); border:1px solid var(--border); border-radius:8px;
+    padding:9px 12px; color:var(--text); font-size:13px; font-family:var(--font-body); outline:none;
+    transition:border-color 0.15s;
+  }
+  .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color:var(--accent); }
+  .form-group textarea { resize:vertical; min-height:80px; }
+  .form-group select option { background:var(--surface2); }
+  .form-actions { display:flex; gap:10px; justify-content:flex-end; margin-top:8px; }
+
+  /* MODAL */
+  .modal-overlay {
+    display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:100;
+    align-items:center; justify-content:center;
+  }
+  .modal-overlay.open { display:flex; }
+  .modal {
+    background:var(--surface); border:1px solid var(--border); border-radius:16px;
+    width:520px; max-width:95vw; max-height:90vh; overflow-y:auto; padding:24px;
+  }
+  .modal-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:20px; }
+  .modal-title { font-family:var(--font-head); font-size:17px; font-weight:700; }
+  .modal-close { width:30px; height:30px; border-radius:6px; background:var(--surface2); border:1px solid var(--border); color:var(--muted); cursor:pointer; font-size:18px; display:flex; align-items:center; justify-content:center; }
+
+  /* SECTION HEADER */
+  .section-header { display:flex; align-items:center; gap:12px; margin-bottom:18px; }
+  .section-header h2 { font-family:var(--font-head); font-size:18px; font-weight:800; flex:1; }
+
+  /* TOAST */
+  .toast {
+    position:fixed; bottom:24px; right:24px; background:var(--surface3); border:1px solid var(--accent);
+    border-radius:10px; padding:12px 18px; font-size:13px; z-index:200; display:none;
+    animation:slideUp 0.3s ease;
+  }
+  @keyframes slideUp { from { transform:translateY(20px); opacity:0; } to { transform:translateY(0); opacity:1; } }
+
+  /* DEALS KANBAN */
+  .kanban { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; }
+  .kanban-col { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:14px; }
+  .col-head { font-size:12px; font-weight:700; margin-bottom:12px; display:flex; align-items:center; justify-content:space-between; }
+  .col-count { background:var(--surface3); padding:2px 8px; border-radius:10px; font-size:11px; }
+  .deal-card {
+    background:var(--surface2); border:1px solid var(--border); border-radius:8px;
+    padding:12px; margin-bottom:8px; cursor:pointer; transition:border-color 0.15s;
+  }
+  .deal-card:hover { border-color:var(--accent); }
+  .deal-name { font-size:13px; font-weight:500; margin-bottom:4px; }
+  .deal-amount { font-size:16px; font-weight:700; font-family:var(--font-head); color:var(--accent); }
+  .deal-meta { font-size:11px; color:var(--muted); margin-top:4px; }
+
+  /* REPORTS */
+  .report-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+  .bar-chart { display:flex; flex-direction:column; gap:8px; }
+  .bar-row { display:flex; align-items:center; gap:10px; }
+  .bar-label { font-size:12px; color:var(--muted); width:80px; flex-shrink:0; }
+  .bar-track { flex:1; height:8px; background:var(--surface3); border-radius:4px; overflow:hidden; }
+  .bar-fill { height:100%; border-radius:4px; transition:width 1s cubic-bezier(.4,0,.2,1); }
+  .bar-val { font-size:12px; font-weight:600; width:50px; text-align:right; }
+
+  /* DONUT */
+  .donut-wrap { display:flex; align-items:center; gap:20px; }
+  .donut-legend { display:flex; flex-direction:column; gap:8px; }
+  .legend-item { display:flex; align-items:center; gap:8px; font-size:12px; }
+  .legend-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+
+  /* SCROLLBAR */
+  ::-webkit-scrollbar { width:5px; height:5px; }
+  ::-webkit-scrollbar-track { background:transparent; }
+  ::-webkit-scrollbar-thumb { background:var(--surface3); border-radius:3px; }
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="logo">Tech<span>Lance</span><sub>CRM PLATFORM</sub></div>
+  <nav>
+    <div class="nav-section">
+      <div class="nav-label">Main</div>
+      <div class="nav-item active" onclick="showPage('dashboard',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+        Dashboard
+      </div>
+      <div class="nav-item" onclick="showPage('contacts',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        Contacts
+        <span class="nav-badge">48</span>
+      </div>
+      <div class="nav-item" onclick="showPage('deals',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        Deals
+      </div>
+      <div class="nav-item" onclick="showPage('accounts',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        Accounts
+      </div>
+      <div class="nav-item" onclick="showPage('tasks',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+        Tasks
+      </div>
+    </div>
+    <div class="nav-section">
+      <div class="nav-label">Analytics</div>
+      <div class="nav-item" onclick="showPage('reports',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+        Reports
+      </div>
+    </div>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="user-chip">
+      <div class="avatar">JD</div>
+      <div class="user-info">
+        <div class="user-name">John Doe</div>
+        <div class="user-role">Admin</div>
+      </div>
+    </div>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<div class="main">
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="page-title" id="pageTitle">Dashboard</div>
+    <div class="search-box">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#7a9cc5" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" placeholder="Search anything...">
+    </div>
+    <div class="notif-btn">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#7a9cc5" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+      <div class="notif-dot"></div>
+    </div>
+    <button class="btn btn-primary" id="topAddBtn" onclick="openAddModal()">+ Add New</button>
+  </div>
+
+  <!-- CONTENT -->
+  <div class="content">
+
+    <!-- DASHBOARD -->
+    <div class="page active" id="page-dashboard">
+      <div class="kpi-row">
+        <div class="kpi-card blue">
+          <div class="kpi-label">Total Revenue</div>
+          <div class="kpi-value">$2.4M</div>
+          <div class="kpi-change up">▲ 12.5% vs last month</div>
+        </div>
+        <div class="kpi-card purple">
+          <div class="kpi-label">Active Deals</div>
+          <div class="kpi-value">127</div>
+          <div class="kpi-change up">▲ 8 new this week</div>
+        </div>
+        <div class="kpi-card green">
+          <div class="kpi-label">Contacts</div>
+          <div class="kpi-value">1,842</div>
+          <div class="kpi-change up">▲ 32 added</div>
+        </div>
+        <div class="kpi-card orange">
+          <div class="kpi-label">Win Rate</div>
+          <div class="kpi-value">68%</div>
+          <div class="kpi-change down">▼ 2.1% vs last month</div>
+        </div>
+      </div>
+
+      <div class="dash-grid">
+        <div class="card">
+          <div class="card-head">
+            <div class="card-title">Sales Pipeline</div>
+            <div class="card-action" onclick="showPage('deals',document.querySelector('[onclick*=deals]'))">View all →</div>
+          </div>
+          <div class="pipeline" id="pipelineChart"></div>
+          <div class="pipe-labels">
+            <div class="pipe-label">Prospect</div>
+            <div class="pipe-label">Qualified</div>
+            <div class="pipe-label">Proposal</div>
+            <div class="pipe-label">Negotiation</div>
+            <div class="pipe-label">Closed</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-head">
+            <div class="card-title">Recent Activity</div>
+          </div>
+          <div id="activityFeed"></div>
+        </div>
+      </div>
+
+      <div style="margin-top:14px;">
+        <div class="card">
+          <div class="card-head">
+            <div class="card-title">Recent Contacts</div>
+            <div class="card-action" onclick="showPage('contacts',document.querySelector('[onclick*=contacts]'))">View all →</div>
+          </div>
+          <div class="table-wrap" id="dashContactsTable"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CONTACTS -->
+    <div class="page" id="page-contacts">
+      <div class="section-header">
+        <h2>Contacts</h2>
+        <button class="btn btn-outline">Export CSV</button>
+        <button class="btn btn-primary" onclick="openModal('contactModal')">+ New Contact</button>
+      </div>
+      <div class="card">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Name</th><th>Company</th><th>Email</th><th>Phone</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="contactsTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- DEALS (KANBAN) -->
+    <div class="page" id="page-deals">
+      <div class="section-header">
+        <h2>Deals Pipeline</h2>
+        <button class="btn btn-primary" onclick="openModal('dealModal')">+ New Deal</button>
+      </div>
+      <div class="kanban" id="kanbanBoard"></div>
+    </div>
+
+    <!-- ACCOUNTS -->
+    <div class="page" id="page-accounts">
+      <div class="section-header">
+        <h2>Accounts</h2>
+        <button class="btn btn-primary" onclick="openModal('accountModal')">+ New Account</button>
+      </div>
+      <div class="card">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Company</th><th>Industry</th><th>Revenue</th><th>Employees</th><th>Status</th><th>Owner</th></tr></thead>
+            <tbody id="accountsTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- TASKS -->
+    <div class="page" id="page-tasks">
+      <div class="section-header">
+        <h2>Tasks</h2>
+        <button class="btn btn-primary" onclick="openModal('taskModal')">+ New Task</button>
+      </div>
+      <div class="card">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Task</th><th>Assigned To</th><th>Due Date</th><th>Priority</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="tasksTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- REPORTS -->
+    <div class="page" id="page-reports">
+      <div class="section-header"><h2>Reports & Analytics</h2></div>
+      <div class="report-grid">
+        <div class="card">
+          <div class="card-head"><div class="card-title">Revenue by Month</div></div>
+          <div class="bar-chart" id="revenueChart"></div>
+        </div>
+        <div class="card">
+          <div class="card-head"><div class="card-title">Deals by Stage</div></div>
+          <div class="donut-wrap">
+            <svg width="120" height="120" viewBox="0 0 120 120" id="donutChart"></svg>
+            <div class="donut-legend" id="donutLegend"></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-head"><div class="card-title">Top Sales Reps</div></div>
+          <div class="bar-chart" id="salesRepChart"></div>
+        </div>
+        <div class="card">
+          <div class="card-head"><div class="card-title">Lead Sources</div></div>
+          <div class="bar-chart" id="leadSourceChart"></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- MODALS -->
+<!-- Contact Modal -->
+<div class="modal-overlay" id="contactModal">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-title">New Contact</div>
+      <button class="modal-close" onclick="closeModal('contactModal')">✕</button>
+    </div>
+    <div class="form-grid">
+      <div class="form-group"><label>First Name</label><input type="text" id="cf-fname" placeholder="John"></div>
+      <div class="form-group"><label>Last Name</label><input type="text" id="cf-lname" placeholder="Doe"></div>
+      <div class="form-group"><label>Email</label><input type="email" id="cf-email" placeholder="john@company.com"></div>
+      <div class="form-group"><label>Phone</label><input type="text" id="cf-phone" placeholder="+1 555-0100"></div>
+      <div class="form-group"><label>Company</label><input type="text" id="cf-company" placeholder="Acme Corp"></div>
+      <div class="form-group"><label>Status</label>
+        <select id="cf-status">
+          <option>Lead</option><option>Prospect</option><option>Customer</option><option>Inactive</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-outline" onclick="closeModal('contactModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveContact()">Save Contact</button>
+    </div>
+  </div>
+</div>
+
+<!-- Deal Modal -->
+<div class="modal-overlay" id="dealModal">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-title">New Deal</div>
+      <button class="modal-close" onclick="closeModal('dealModal')">✕</button>
+    </div>
+    <div class="form-grid">
+      <div class="form-group" style="grid-column:1/-1"><label>Deal Name</label><input type="text" id="df-name" placeholder="Enterprise License Deal"></div>
+      <div class="form-group"><label>Amount ($)</label><input type="number" id="df-amount" placeholder="50000"></div>
+      <div class="form-group"><label>Stage</label>
+        <select id="df-stage">
+          <option>Prospect</option><option>Qualified</option><option>Proposal</option><option>Negotiation</option><option>Closed Won</option>
+        </select>
+      </div>
+      <div class="form-group"><label>Contact</label><input type="text" id="df-contact" placeholder="John Doe"></div>
+      <div class="form-group"><label>Close Date</label><input type="date" id="df-date"></div>
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-outline" onclick="closeModal('dealModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveDeal()">Save Deal</button>
+    </div>
+  </div>
+</div>
+
+<!-- Account Modal -->
+<div class="modal-overlay" id="accountModal">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-title">New Account</div>
+      <button class="modal-close" onclick="closeModal('accountModal')">✕</button>
+    </div>
+    <div class="form-grid">
+      <div class="form-group" style="grid-column:1/-1"><label>Company Name</label><input type="text" id="af-name" placeholder="Acme Corporation"></div>
+      <div class="form-group"><label>Industry</label>
+        <select id="af-industry"><option>Technology</option><option>Finance</option><option>Healthcare</option><option>Retail</option><option>Manufacturing</option><option>Other</option></select>
+      </div>
+      <div class="form-group"><label>Annual Revenue ($)</label><input type="number" id="af-revenue" placeholder="1000000"></div>
+      <div class="form-group"><label>Employees</label><input type="number" id="af-employees" placeholder="250"></div>
+      <div class="form-group"><label>Status</label>
+        <select id="af-status"><option>Active</option><option>Prospect</option><option>Inactive</option></select>
+      </div>
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-outline" onclick="closeModal('accountModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveAccount()">Save Account</button>
+    </div>
+  </div>
+</div>
+
+<!-- Task Modal -->
+<div class="modal-overlay" id="taskModal">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-title">New Task</div>
+      <button class="modal-close" onclick="closeModal('taskModal')">✕</button>
+    </div>
+    <div class="form-grid">
+      <div class="form-group" style="grid-column:1/-1"><label>Task Title</label><input type="text" id="tf-title" placeholder="Follow up with client"></div>
+      <div class="form-group"><label>Assigned To</label><input type="text" id="tf-assign" placeholder="John Doe"></div>
+      <div class="form-group"><label>Due Date</label><input type="date" id="tf-date"></div>
+      <div class="form-group"><label>Priority</label>
+        <select id="tf-priority"><option>High</option><option>Medium</option><option>Low</option></select>
+      </div>
+      <div class="form-group"><label>Status</label>
+        <select id="tf-status"><option>Not Started</option><option>In Progress</option><option>Completed</option></select>
+      </div>
+      <div class="form-group" style="grid-column:1/-1"><label>Notes</label><textarea id="tf-notes" placeholder="Task details..."></textarea></div>
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-outline" onclick="closeModal('taskModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveTask()">Save Task</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ─── DATA STORE ───────────────────────────────────────────
+let data = {
+  contacts: [
+    {id:1, fname:'Sarah', lname:'Johnson', company:'Nexus Tech', email:'sarah@nexus.com', phone:'555-0101', status:'Customer'},
+    {id:2, fname:'Michael', lname:'Chen', company:'Blue Horizon', email:'m.chen@blueh.com', phone:'555-0102', status:'Prospect'},
+    {id:3, fname:'Emily', lname:'Rodriguez', company:'DataFlow Inc', email:'emily@dataflow.com', phone:'555-0103', status:'Lead'},
+    {id:4, fname:'James', lname:'Williams', company:'Summit Corp', email:'j.williams@summit.com', phone:'555-0104', status:'Customer'},
+    {id:5, fname:'Aisha', lname:'Patel', company:'TechVault', email:'aisha@techvault.io', phone:'555-0105', status:'Lead'},
+  ],
+  deals: [
+    {id:1, name:'Nexus Enterprise License', amount:85000, stage:'Negotiation', contact:'Sarah Johnson', date:'2025-06-30'},
+    {id:2, name:'Blue Horizon SaaS Plan', amount:24000, stage:'Proposal', contact:'Michael Chen', date:'2025-07-15'},
+    {id:3, name:'DataFlow Analytics Module', amount:42000, stage:'Qualified', contact:'Emily Rodriguez', date:'2025-07-01'},
+    {id:4, name:'Summit Annual Contract', amount:120000, stage:'Closed Won', contact:'James Williams', date:'2025-05-20'},
+    {id:5, name:'TechVault Starter Pack', amount:9800, stage:'Prospect', contact:'Aisha Patel', date:'2025-08-01'},
+    {id:6, name:'Pinnacle CRM Bundle', amount:67000, stage:'Proposal', contact:'Sarah Johnson', date:'2025-07-22'},
+  ],
+  accounts: [
+    {id:1, name:'Nexus Tech', industry:'Technology', revenue:5200000, employees:320, status:'Active', owner:'John Doe'},
+    {id:2, name:'Blue Horizon', industry:'Finance', revenue:18000000, employees:1400, status:'Active', owner:'Jane Smith'},
+    {id:3, name:'DataFlow Inc', industry:'Technology', revenue:3100000, employees:185, status:'Prospect', owner:'John Doe'},
+    {id:4, name:'Summit Corp', industry:'Manufacturing', revenue:42000000, employees:3200, status:'Active', owner:'Mike Lee'},
+    {id:5, name:'TechVault', industry:'Technology', revenue:800000, employees:48, status:'Prospect', owner:'John Doe'},
+  ],
+  tasks: [
+    {id:1, title:'Follow up with Nexus Tech', assign:'John Doe', date:'2025-06-10', priority:'High', status:'In Progress'},
+    {id:2, title:'Send proposal to Blue Horizon', assign:'Jane Smith', date:'2025-06-08', priority:'High', status:'Not Started'},
+    {id:3, title:'Schedule product demo', assign:'John Doe', date:'2025-06-15', priority:'Medium', status:'Not Started'},
+    {id:4, title:'Quarterly review call', assign:'Mike Lee', date:'2025-06-20', priority:'Low', status:'Completed'},
+    {id:5, title:'Update DataFlow contract', assign:'John Doe', date:'2025-06-12', priority:'Medium', status:'In Progress'},
+  ]
+};
+
+let currentPage = 'dashboard';
+
+// ─── NAVIGATION ───────────────────────────────────────────
+function showPage(name, el) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+  if(el) el.classList.add('active');
+  currentPage = name;
+  const titles = {dashboard:'Dashboard',contacts:'Contacts',deals:'Deals Pipeline',accounts:'Accounts',tasks:'Tasks',reports:'Reports'};
+  document.getElementById('pageTitle').textContent = titles[name] || name;
+  if(name==='dashboard') renderDashboard();
+  if(name==='contacts') renderContacts();
+  if(name==='deals') renderKanban();
+  if(name==='accounts') renderAccounts();
+  if(name==='tasks') renderTasks();
+  if(name==='reports') renderReports();
+}
+
+function openAddModal() {
+  const map = {contacts:'contactModal',deals:'dealModal',accounts:'accountModal',tasks:'taskModal',dashboard:'contactModal'};
+  openModal(map[currentPage] || 'contactModal');
+}
+
+// ─── MODAL ────────────────────────────────────────────────
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+document.querySelectorAll('.modal-overlay').forEach(m => {
+  m.addEventListener('click', e => { if(e.target===m) m.classList.remove('open'); });
+});
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = '✓ '+msg; t.style.display='block';
+  setTimeout(()=>{ t.style.display='none'; }, 3000);
+}
+
+// ─── DASHBOARD ────────────────────────────────────────────
+function renderDashboard() {
+  // Pipeline bars
+  const stages = [{label:'Prospect',val:42,color:'#7c3aed'},{label:'Qualified',val:68,color:'#00d4ff'},{label:'Proposal',val:55,color:'#10b981'},{label:'Negotiation',val:38,color:'#f59e0b'},{label:'Closed',val:28,color:'#ef4444'}];
+  const max = Math.max(...stages.map(s=>s.val));
+  const pc = document.getElementById('pipelineChart');
+  pc.innerHTML = stages.map(s=>`<div class="pipe-bar" style="height:${(s.val/max)*100}%;background:${s.color};" title="${s.label}: ${s.val}"><span class="val" style="color:${s.color}">${s.val}</span></div>`).join('');
+
+  // Activity
+  const acts = [
+    {icon:'💼',color:'rgba(0,212,255,0.15)',text:'New deal added: Nexus Enterprise License',time:'2 hours ago'},
+    {icon:'👤',color:'rgba(124,58,237,0.15)',text:'Contact Aisha Patel created',time:'4 hours ago'},
+    {icon:'✅',color:'rgba(16,185,129,0.15)',text:'Task completed: Quarterly review call',time:'Yesterday'},
+    {icon:'📧',color:'rgba(245,158,11,0.15)',text:'Email sent to Blue Horizon',time:'Yesterday'},
+    {icon:'🏢',color:'rgba(239,68,68,0.15)',text:'Account TechVault updated',time:'2 days ago'},
+  ];
+  document.getElementById('activityFeed').innerHTML = acts.map(a=>`<div class="activity-item"><div class="act-icon" style="background:${a.color}">${a.icon}</div><div><div class="act-text">${a.text}</div><div class="act-meta">${a.time}</div></div></div>`).join('');
+
+  // Contacts table (first 4)
+  renderContactsTable(data.contacts.slice(0,4), 'dashContactsTable');
+}
+
+// ─── CONTACTS ─────────────────────────────────────────────
+function renderContacts() { renderContactsTable(data.contacts, 'contactsTableBody', true); }
+function renderContactsTable(contacts, tbodyId, showActions=false) {
+  const pill = s => {const m={Customer:'pill-green',Prospect:'pill-blue',Lead:'pill-yellow',Inactive:'pill-red'};return`<span class="status-pill ${m[s]||'pill-gray'}">${s}</span>`;};
+  const el = document.getElementById(tbodyId);
+  if(!el) return;
+  if(!showActions) {
+    el.innerHTML = `<table width="100%" style="border-collapse:collapse"><thead><tr style="border-bottom:1px solid var(--border)"><th style="padding:8px 14px;font-size:11px;color:var(--muted);text-align:left">Name</th><th style="padding:8px 14px;font-size:11px;color:var(--muted);text-align:left">Company</th><th style="padding:8px 14px;font-size:11px;color:var(--muted);text-align:left">Email</th><th style="padding:8px 14px;font-size:11px;color:var(--muted);text-align:left">Status</th></tr></thead><tbody>${contacts.map(c=>`<tr style="border-bottom:1px solid rgba(255,255,255,0.04)"><td style="padding:10px 14px">${c.fname} ${c.lname}</td><td style="padding:10px 14px;color:var(--muted)">${c.company}</td><td style="padding:10px 14px;color:var(--muted)">${c.email}</td><td style="padding:10px 14px">${pill(c.status)}</td></tr>`).join('')}</tbody></table>`;
+    return;
+  }
+  el.innerHTML = contacts.map(c=>`<tr><td><strong>${c.fname} ${c.lname}</strong></td><td>${c.company}</td><td style="color:var(--muted)">${c.email}</td><td style="color:var(--muted)">${c.phone}</td><td>${pill(c.status)}</td><td><button class="btn btn-outline" style="padding:4px 10px;font-size:11px;" onclick="deleteContact(${c.id})">Delete</button></td></tr>`).join('');
+}
+
+function saveContact() {
+  const f = id => document.getElementById(id).value.trim();
+  if(!f('cf-fname')||!f('cf-lname')) { showToast('Please fill required fields'); return; }
+  data.contacts.push({id:Date.now(),fname:f('cf-fname'),lname:f('cf-lname'),email:f('cf-email'),phone:f('cf-phone'),company:f('cf-company'),status:f('cf-status')});
+  closeModal('contactModal');
+  renderContacts();
+  showToast('Contact saved successfully!');
+  ['cf-fname','cf-lname','cf-email','cf-phone','cf-company'].forEach(id=>document.getElementById(id).value='');
+}
+
+function deleteContact(id) {
+  data.contacts = data.contacts.filter(c=>c.id!==id);
+  renderContacts();
+  showToast('Contact deleted');
+}
+
+// ─── DEALS / KANBAN ───────────────────────────────────────
+function renderKanban() {
+  const stages = ['Prospect','Qualified','Proposal','Negotiation','Closed Won'];
+  const colors = {Prospect:'#7c3aed',Qualified:'#00d4ff',Proposal:'#10b981',Negotiation:'#f59e0b','Closed Won':'#ef4444'};
+  const board = document.getElementById('kanbanBoard');
+  board.innerHTML = stages.map(stage => {
+    const deals = data.deals.filter(d=>d.stage===stage);
+    const total = deals.reduce((s,d)=>s+d.amount,0);
+    return `<div class="kanban-col">
+      <div class="col-head" style="color:${colors[stage]}">
+        ${stage} <span class="col-count">${deals.length}</span>
+      </div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:10px">$${total.toLocaleString()}</div>
+      ${deals.map(d=>`<div class="deal-card">
+        <div class="deal-name">${d.name}</div>
+        <div class="deal-amount">$${d.amount.toLocaleString()}</div>
+        <div class="deal-meta">${d.contact} · ${d.date}</div>
+      </div>`).join('')}
+    </div>`;
+  }).join('');
+}
+
+function saveDeal() {
+  const f = id => document.getElementById(id).value.trim();
+  if(!f('df-name')) { showToast('Please enter deal name'); return; }
+  data.deals.push({id:Date.now(),name:f('df-name'),amount:parseFloat(f('df-amount'))||0,stage:f('df-stage'),contact:f('df-contact'),date:f('df-date')});
+  closeModal('dealModal');
+  renderKanban();
+  showToast('Deal added to pipeline!');
+}
+
+// ─── ACCOUNTS ─────────────────────────────────────────────
+function renderAccounts() {
+  const pill = s => {const m={Active:'pill-green',Prospect:'pill-blue',Inactive:'pill-red'};return`<span class="status-pill ${m[s]||'pill-gray'}">${s}</span>`;};
+  document.getElementById('accountsTableBody').innerHTML = data.accounts.map(a=>`<tr>
+    <td><strong>${a.name}</strong></td>
+    <td><span class="status-pill pill-purple">${a.industry}</span></td>
+    <td>$${(a.revenue/1e6).toFixed(1)}M</td>
+    <td>${a.employees.toLocaleString()}</td>
+    <td>${pill(a.status)}</td>
+    <td style="color:var(--muted)">${a.owner}</td>
+  </tr>`).join('');
+}
+
+function saveAccount() {
+  const f = id => document.getElementById(id).value.trim();
+  if(!f('af-name')) { showToast('Enter company name'); return; }
+  data.accounts.push({id:Date.now(),name:f('af-name'),industry:f('af-industry'),revenue:parseFloat(f('af-revenue'))||0,employees:parseInt(f('af-employees'))||0,status:f('af-status'),owner:'John Doe'});
+  closeModal('accountModal');
+  renderAccounts();
+  showToast('Account created!');
+}
+
+// ─── TASKS ────────────────────────────────────────────────
+function renderTasks() {
+  const pp = p => {const m={High:'pill-red',Medium:'pill-yellow',Low:'pill-green'};return`<span class="status-pill ${m[p]}">${p}</span>`;};
+  const sp = s => {const m={'In Progress':'pill-blue','Completed':'pill-green','Not Started':'pill-gray'};return`<span class="status-pill ${m[s]||'pill-gray'}">${s}</span>`;};
+  document.getElementById('tasksTableBody').innerHTML = data.tasks.map(t=>`<tr>
+    <td><strong>${t.title}</strong></td>
+    <td style="color:var(--muted)">${t.assign}</td>
+    <td style="color:var(--muted)">${t.date}</td>
+    <td>${pp(t.priority)}</td>
+    <td>${sp(t.status)}</td>
+    <td><button class="btn btn-outline" style="padding:4px 10px;font-size:11px;" onclick="completeTask(${t.id})">${t.status==='Completed'?'Reopen':'Complete'}</button></td>
+  </tr>`).join('');
+}
+
+function completeTask(id) {
+  const t = data.tasks.find(t=>t.id===id);
+  if(t) t.status = t.status==='Completed'?'Not Started':'Completed';
+  renderTasks();
+  showToast('Task updated!');
+}
+
+function saveTask() {
+  const f = id => document.getElementById(id).value.trim();
+  if(!f('tf-title')) { showToast('Enter task title'); return; }
+  data.tasks.push({id:Date.now(),title:f('tf-title'),assign:f('tf-assign'),date:f('tf-date'),priority:f('tf-priority'),status:f('tf-status')});
+  closeModal('taskModal');
+  renderTasks();
+  showToast('Task created!');
+}
+
+// ─── REPORTS ──────────────────────────────────────────────
+function renderReports() {
+  // Revenue by month
+  const months = ['Jan','Feb','Mar','Apr','May','Jun'];
+  const revs = [180,210,165,290,240,310];
+  const maxR = Math.max(...revs);
+  document.getElementById('revenueChart').innerHTML = months.map((m,i)=>`<div class="bar-row"><div class="bar-label">${m} 2025</div><div class="bar-track"><div class="bar-fill" style="width:${(revs[i]/maxR)*100}%;background:var(--accent)"></div></div><div class="bar-val" style="color:var(--accent)">$${revs[i]}K</div></div>`).join('');
+
+  // Sales reps
+  const reps = [['John Doe',92],['Jane Smith',78],['Mike Lee',65],['Lisa Park',55]];
+  const maxS = 100;
+  document.getElementById('salesRepChart').innerHTML = reps.map(([n,v])=>`<div class="bar-row"><div class="bar-label">${n.split(' ')[0]}</div><div class="bar-track"><div class="bar-fill" style="width:${v}%;background:#7c3aed"></div></div><div class="bar-val" style="color:#a78bfa">${v}%</div></div>`).join('');
+
+  // Lead sources
+  const sources = [['Website',45],['Referral',30],['LinkedIn',15],['Events',10]];
+  document.getElementById('leadSourceChart').innerHTML = sources.map(([n,v])=>`<div class="bar-row"><div class="bar-label">${n}</div><div class="bar-track"><div class="bar-fill" style="width:${v*2}%;background:#10b981"></div></div><div class="bar-val" style="color:#34d399">${v}%</div></div>`).join('');
+
+  // Donut
+  const dStages = [{label:'Prospect',val:35,color:'#7c3aed'},{label:'Qualified',val:25,color:'#00d4ff'},{label:'Proposal',val:20,color:'#10b981'},{label:'Negotiation',val:12,color:'#f59e0b'},{label:'Closed',val:8,color:'#ef4444'}];
+  const total = dStages.reduce((s,d)=>s+d.val,0);
+  let angle = -Math.PI/2; const r=45,cx=60,cy=60,ir=28;
+  let paths='';
+  dStages.forEach(d=>{
+    const a=(d.val/total)*Math.PI*2;
+    const x1=cx+r*Math.cos(angle),y1=cy+r*Math.sin(angle);
+    const x2=cx+r*Math.cos(angle+a),y2=cy+r*Math.sin(angle+a);
+    const xi1=cx+ir*Math.cos(angle),yi1=cy+ir*Math.sin(angle);
+    const xi2=cx+ir*Math.cos(angle+a),yi2=cy+ir*Math.sin(angle+a);
+    const large=a>Math.PI?1:0;
+    paths+=`<path d="M${x1.toFixed(1)} ${y1.toFixed(1)} A${r} ${r} 0 ${large} 1 ${x2.toFixed(1)} ${y2.toFixed(1)} L${xi2.toFixed(1)} ${yi2.toFixed(1)} A${ir} ${ir} 0 ${large} 0 ${xi1.toFixed(1)} ${yi1.toFixed(1)} Z" fill="${d.color}" opacity="0.85"/>`;
+    angle+=a;
+  });
+  document.getElementById('donutChart').innerHTML=paths;
+  document.getElementById('donutLegend').innerHTML=dStages.map(d=>`<div class="legend-item"><div class="legend-dot" style="background:${d.color}"></div><span style="color:var(--muted)">${d.label}</span><span style="font-weight:600;margin-left:auto">${d.val}%</span></div>`).join('');
+}
+
+// ─── INIT ─────────────────────────────────────────────────
+renderDashboard();
+</script>
+</body>
+</html>
